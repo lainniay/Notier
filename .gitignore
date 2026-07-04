@@ -1,0 +1,30 @@
+# Go build artifacts
+/bin/
+/build/
+/dist/
+*.exe
+*.test
+*.out
+
+# Test / coverage
+coverage.out
+*.cover
+
+# Dependency/cache leftovers
+vendor/
+
+# Local config / secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+.omo/
