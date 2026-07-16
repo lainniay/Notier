@@ -6,52 +6,55 @@ import (
 	"path/filepath"
 )
 
-type Path struct {
+type Paths struct {
 	ConfigFile  string
+	AppsDir     string
 	SessionFile string
 	StdoutLog   string
 	StderrLog   string
 }
 
-func DefaultDir() (Path, error) {
-	configDir, err := getConfigDir()
+func Default() (Paths, error) {
+	configDir, err := getXdgDir("XDG_CONFIG_HOME", ".config")
 	if err != nil {
-		return Path{}, err
+		return Paths{}, err
 	}
 
-	stateDir, err := getStateDir()
+	stateDir, err := getXdgDir("XDG_STATE_HOME", filepath.Join(".local", "state"))
 	if err != nil {
-		return Path{}, err
+		return Paths{}, err
 	}
 
-	return Path{
+	dataDir, err := getXdgDir("XDG_STATE_HOME", filepath.Join(".local", "share"))
+	if err != nil {
+		return Paths{}, err
+	}
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return Paths{}, err
+	}
+
+	return Paths{
 		ConfigFile:  filepath.Join(configDir, "config.toml"),
-		SessionFile: filepath.Join(stateDir, "session.json"),
+		AppsDir:     filepath.Join(home, "Applications", "Notier Senders"),
+		SessionFile: filepath.Join(dataDir, "session.json"),
 		StdoutLog:   filepath.Join(stateDir, "stdout.log"),
 		StderrLog:   filepath.Join(stateDir, "stderr.log"),
 	}, nil
 }
 
-func getConfigDir() (string, error) {
-	base := os.Getenv("XDG_CONFIG_HOME")
+func getXdgDir(env, fallback string) (string, error) {
+	base := os.Getenv(env)
 	if base == "" || !filepath.IsAbs(base) {
 		home, err := os.UserHomeDir()
 		if err != nil {
 			return "", err
 		}
-		base = filepath.Join(home, ".config")
+		base = filepath.Join(home, fallback)
 	}
-	return filepath.Join(base, "notier"), nil
-}
-
-func getStateDir() (string, error) {
-	base := os.Getenv("XDG_STATE_HOME")
-	if base == "" || !filepath.IsAbs(base) {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return "", err
-		}
-		base = filepath.Join(home, ".local", "state")
+	dir := filepath.Join(base, "notier")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return "", err
 	}
-	return filepath.Join(base, "notier"), nil
+	return dir, nil
 }
