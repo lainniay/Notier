@@ -95,8 +95,8 @@ func TestTerminalCommand_routes_loaded_apps_to_native_executable(t *testing.T) {
 	}
 	terminal := Terminal{Path: TerminalNotifier, apps: apps}
 	wantArgs := []string{
-		"--title", "Title",
-		"--subtitle", "Subtitle",
+		"--title", "Subtitle",
+		"--subtitle", "",
 		"--message", "Body",
 	}
 	for _, tt := range tests {

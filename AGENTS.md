@@ -36,15 +36,17 @@
 - `notify.Parse` uses `strings.SplitN(text, "\n\n", 3)`, so the body may contain further blank lines.
 - Malformed messages, missing sections, or blank trimmed sections are ignored.
 - Known lowercase app keys are `qq`, `wechat`, `wecom`, `mail`, `sms`.
-- Unknown app names are allowed, but they use plain `terminal-notifier`.
+- Unknown app names are allowed; they use plain `terminal-notifier` because they have no native sender app key.
 - `Notifacation` is the current exported type spelling; don't opportunistically rename it.
 
 ## Notifications And Sender Apps
-- Only supported notifier is `terminal-notifier`; empty config defaults to it.
-- Runtime requires macOS, `terminal-notifier` on `PATH`, `/usr/bin/plutil`, and LaunchServices `lsregister`.
-- `Terminal.Notify` routes known loaded app keys to the bundle's `Contents/MacOS/NotierSender` executable with `--title`, `--subtitle`, and `--message`; unknown or missing apps use plain `terminal-notifier` with no sender argument.
-- Required bundles are `NotierQQ.app` (`com.notier.sender.qq`), `NotierWeChat.app` (`com.notier.sender.wechat`), `NotierWeCom.app` (`com.notier.sender.wecom`), `NotierMail.app` (`com.notier.sender.mail`), and `NotierSMS.app` (`com.notier.sender.sms`).
+- The configured notifier value remains `terminal-notifier`; `notify.New` also loads optional native sender apps. The binary is used only as fallback for unknown app names or known apps whose native bundle is missing.
+- Runtime requires macOS. Present native bundles use `/usr/bin/plutil` and LaunchServices `lsregister` during startup; fallback delivery requires `terminal-notifier` on `PATH`.
+- Loaded app keys run the bundle's `Contents/MacOS/NotierSender`: `--title` receives `msg.Subtitle`, `--subtitle` receives an empty string, and `--message` receives `msg.Body`; `msg.Title` is discarded on this native path.
+- Recognized bundles are `NotierQQ.app` (`com.notier.sender.qq`), `NotierWeChat.app` (`com.notier.sender.wechat`), `NotierWeCom.app` (`com.notier.sender.wecom`), `NotierMail.app` (`com.notier.sender.mail`), and `NotierSMS.app` (`com.notier.sender.sms`).
+- Clicking QQ, WeChat, or Mail notifications launches the corresponding application; WeCom and SMS clicks intentionally do nothing. These native sender implementations live outside this repository.
+- QQ, WeChat, and Mail notifications are suppressed while their corresponding application process is running; WeCom and SMS have no process check.
 - Startup validates present bundle IDs with `/usr/bin/plutil` and requires an executable `Contents/MacOS/NotierSender` before any registration.
-- Missing bundles are skipped without startup validation or registration commands and fall back to the default terminal-notifier identity.
+- Missing bundles are skipped without startup validation or registration commands and fall back to plain `terminal-notifier` unless the running-app suppression above applies.
 - Bundle ID mismatch aborts startup before registration.
 - Registration failure from `lsregister -f <app>` aborts startup with the app path in the error.

@@ -41,8 +41,8 @@ func (t Terminal) Notify(ctx context.Context, msg Notifacation) error {
 func (t Terminal) command(msg Notifacation) (string, []string) {
 	if path, ok := t.apps[msg.AppKey]; ok {
 		return path, []string{
-			"--title", msg.Title,
-			"--subtitle", msg.Subtitle,
+			"--title", msg.Subtitle,
+			"--subtitle", "",
 			"--message", msg.Body,
 		}
 	}
